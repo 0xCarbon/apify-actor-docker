@@ -16,7 +16,18 @@ RUN apt update \
     # Uninstall system NodeJs
     && apt purge -yq nodejs \
     # Install node
-    && apt update && apt install -y curl \
+    && apt update && apt install -y curl gnupg software-properties-common \
+    # Add R repository for version 4.1 or newer
+    && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 \
+    && add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu jammy-cran40/" \
+    && apt update \
+    && apt install -y r-base r-base-dev \
+    libpoppler-cpp-dev \
+    libcurl4-openssl-dev \
+    libssl-dev \
+    libxml2-dev \
+    libfontconfig1-dev \
+    libfreetype6-dev \
     && curl -sL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
     && apt install -y nodejs \
     # The following packages are needed for the intermediate certificates to work in Firefox.
@@ -41,6 +52,9 @@ RUN apt update \
     && mkdir -p /etc/opt/chrome/policies/managed \
     && echo '{ "CommandLineFlagSecurityWarningsEnabled": false }' > /etc/opt/chrome/policies/managed/managed_policies.json \
     && echo '{ "ComponentUpdatesEnabled": false }' > /etc/opt/chrome/policies/managed/component_update.json \
+    \
+    # Install R packages
+    && Rscript -e 'install.packages(c("vctrs", "rlang", "magrittr", "lifecycle", "glue", "cli", "stringi", "stringr", "cpp11", "timechange", "generics", "sys", "curl", "askpass", "Rcpp", "utf8", "withr", "pkgconfig", "fansi", "R6", "pillar", "tidyselect", "tibble", "purrr", "dplyr", "openssl", "mime", "jsonlite", "rstudioapi", "tidyr", "snakecase", "lubridate", "hms", "qpdf", "xml2", "selectr", "httr", "prettyunits", "crayon", "re2", "getPass", "janitor", "listenv", "pdftools", "abjutils", "rvest", "progress"), repos="https://cran.rstudio.com/")' \
     \
     # Globally disable the update-notifier.
     && npm config --global set update-notifier false \

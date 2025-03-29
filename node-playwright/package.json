@@ -7,16 +7,16 @@
         "start": "node main.js"
     },
     "dependencies": {
-        "apify": "APIFY_VERSION",
-        "crawlee": "CRAWLEE_VERSION",
-        "playwright": "PLAYWRIGHT_VERSION",
+        "apify": "^3.3.2",
+        "crawlee": "^3.13.0",
+        "playwright": "^1.47.2",
         "typescript": "^5.4.3"
     },
     "overrides": {
         "apify": {
-            "@crawlee/core": "CRAWLEE_VERSION",
-            "@crawlee/types": "CRAWLEE_VERSION",
-            "@crawlee/utils": "CRAWLEE_VERSION"
+            "@crawlee/core": "^3.13.0",
+            "@crawlee/types": "^3.13.0",
+            "@crawlee/utils": "^3.13.0"
         }
     },
     "repository": {}
