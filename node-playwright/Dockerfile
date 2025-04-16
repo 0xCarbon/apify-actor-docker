@@ -17,6 +17,12 @@ RUN apt update \
     && apt purge -yq nodejs \
     # Install node
     && apt update && apt install -y curl gnupg software-properties-common \
+    # Add Python 3.11 repository and install it
+    && add-apt-repository ppa:deadsnakes/ppa \
+    && apt update \
+    && apt install -y python3.11 python3.11-venv python3.11-dev python3-pip \
+    && ln -s /usr/bin/python3.11 /usr/local/bin/python3 \
+    && ln -s /usr/bin/python3.11 /usr/local/bin/python \
     # Add R repository for version 4.1 or newer
     && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 \
     && add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu jammy-cran40/" \
