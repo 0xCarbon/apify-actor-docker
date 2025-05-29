@@ -59,7 +59,7 @@ WORKDIR /home/myuser
 ENV PLAYWRIGHT_BROWSERS_PATH=/home/myuser/pw-browsers
 
 # Copy source code and xvfb script
-COPY --chown=myuser:myuser package.json main.js chrome_test.js start_xvfb_and_run_cmd.sh new_xvfb_run_cmd.sh /home/myuser/
+COPY --chown=myuser:myuser package.json main.js chrome_test.js start_xvfb_and_run_cmd.sh new_xvfb_run_cmd.sh xvfb-entrypoint.sh /home/myuser/
 
 # Sets path to Chrome executable, this is used by Apify.launchPuppeteer()
 ENV APIFY_CHROME_EXECUTABLE_PATH=/usr/bin/google-chrome
@@ -95,20 +95,15 @@ RUN npm --quiet set progress=false \
 ENV APIFY_DEFAULT_BROWSER_PATH=${PLAYWRIGHT_BROWSERS_PATH}/chrome
 
 # Prevent installing of browsers by future `npm install`.
-ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD 1
-
-# Maybe we can consider changing it to 1920x1080x24. However I guess it should not have any effect.
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 
 # Set up xvfb
-
-# We should you the autodisplay detection as suggested here: https://github.com/microsoft/playwright/issues/2728#issuecomment-678083619
-ENV DISPLAY=:99
 ENV XVFB_WHD=1920x1080x24+32
-# Uncoment this line if you want to run browser in headfull mode by defautl.
-# ENV APIFY_XVFB=1
+
+# The entrypoint script will be the one handling the CMD passed in, and will always wrap it into xvfb-run
+ENTRYPOINT ["/home/myuser/xvfb-entrypoint.sh"]
 
 # NOTEs:
 # - This needs to be compatible with CLI.
 # - Using CMD instead of ENTRYPOINT, to allow manual overriding
-# CMD ./start_xvfb_and_run_cmd.sh && npm start --silent
-CMD ./new_xvfb_run_cmd.sh npm start --silent
+CMD ["npm", "start", "--silent"]
