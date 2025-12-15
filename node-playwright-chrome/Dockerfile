@@ -59,7 +59,7 @@ WORKDIR /home/myuser
 ENV PLAYWRIGHT_BROWSERS_PATH=/home/myuser/pw-browsers
 
 # Copy source code and xvfb script
-COPY --chown=myuser:myuser package.json main.js chrome_test.js start_xvfb_and_run_cmd.sh new_xvfb_run_cmd.sh xvfb-entrypoint.sh /home/myuser/
+COPY --chown=myuser:myuser package.json main.js check-playwright-version.mjs chrome_test.js start_xvfb_and_run_cmd.sh new_xvfb_run_cmd.sh xvfb-entrypoint.sh /home/myuser/
 
 # Sets path to Chrome executable, this is used by Apify.launchPuppeteer()
 ENV APIFY_CHROME_EXECUTABLE_PATH=/usr/bin/google-chrome
@@ -88,8 +88,8 @@ RUN npm --quiet set progress=false \
     && echo "Google Chrome version:" \
     && bash -c "$APIFY_CHROME_EXECUTABLE_PATH --version" \
     # symlink the chromium binary to the root folder in order to bypass the versioning and resulting browser launch crashes.
-    && ln -s ${PLAYWRIGHT_BROWSERS_PATH}/chromium-*/chrome-linux/chrome ${PLAYWRIGHT_BROWSERS_PATH}/ \
-    # Playwright allows donwloading only one browser through separate package with same export. So we rename it to just playwright.
+    && ln -s ${PLAYWRIGHT_BROWSERS_PATH}/chromium-*/chrome-linux*/chrome ${PLAYWRIGHT_BROWSERS_PATH}/ \
+    # Playwright allows downloading only one browser through separate package with same export. So we rename it to just playwright.
     && mv ./node_modules/playwright-chromium ./node_modules/playwright && rm -rf ./node_modules/playwright-chromium
 
 ENV APIFY_DEFAULT_BROWSER_PATH=${PLAYWRIGHT_BROWSERS_PATH}/chrome
