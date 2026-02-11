@@ -32,6 +32,9 @@ RUN sh -c 'echo "deb http://ftp.us.debian.org/debian bookworm main non-free" >> 
     # Globally disable the update-notifier.
     && npm config --global set update-notifier false \
     \
+    # Install pnpm globally
+    && npm install -g pnpm \
+    \
     # Install all required playwright dependencies for firefox
     && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm_config_ignore_scripts=1 npx playwright install-deps firefox \
     \
@@ -74,6 +77,8 @@ RUN npm --quiet set progress=false \
     && node --version \
     && echo "NPM version:" \
     && npm --version \
+    && echo "PNPM version:" \
+    && pnpm --version \
     # Install Camoufox
     && npx camoufox-js fetch \
     # Overrides the dynamic library used by Firefox to determine trusted root certificates with p11-kit-trust.so, which loads the system certificates.
