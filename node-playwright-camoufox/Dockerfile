@@ -69,7 +69,7 @@ RUN npm --quiet set progress=false \
     && echo "NPM version:" \
     && npm --version \
     && npx camoufox-js fetch \
-    && npx playwright install chromium \
+    && npx playwright@1.46.1 install chromium \
     && rm -f /home/myuser/.cache/camoufox/libnssckbi.so \
     && ln -s "$(find /usr/lib -name p11-kit-trust.so -print -quit)" /home/myuser/.cache/camoufox/libnssckbi.so
 
