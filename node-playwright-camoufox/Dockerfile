@@ -1,47 +1,41 @@
 ARG NODE_VERSION=20
 # Use bookworm to be consistent across node versions.
-FROM --platform=linux/amd64 node:${NODE_VERSION}-bookworm-slim
+FROM node:${NODE_VERSION}-bookworm-slim
 
 LABEL maintainer="support@apify.com" description="Base image for Apify Actors using Camoufox"
 ENV DEBIAN_FRONTEND=noninteractive
 
 COPY ./register_intermediate_certs.sh ./register_intermediate_certs.sh
 
-# Install Firefox dependencies + tools
+# Install system dependencies, Python, R, and browser deps
 RUN sh -c 'echo "deb http://ftp.us.debian.org/debian bookworm main non-free" >> /etc/apt/sources.list.d/fonts.list' \
     && apt update \
     && apt install -y --no-install-recommends \
-    # Found this in other images, not sure whether it's needed, it does not come from Playwright deps
-    procps \
-    # The following packages are needed for the intermediate certificates to work in Firefox.
-    ca-certificates \
-    jq \
-    wget \
-    p11-kit \
-    xauth \
-    \
-    # Register cerificates
+        procps ca-certificates jq wget curl gnupg p11-kit xauth xvfb \
+        python3 python3-venv python3-dev python3-pip \
     && chmod +x ./register_intermediate_certs.sh \
     && ./register_intermediate_certs.sh \
-    \
-    # Add user so we don't need --no-sandbox.
+    && gpg --keyserver keyserver.ubuntu.com --recv-key '95C0FAF38DB3CCAD0C080A7BDC78B2DDEABC47B7' \
+    && gpg --export '95C0FAF38DB3CCAD0C080A7BDC78B2DDEABC47B7' > /usr/share/keyrings/r-project.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/r-project.gpg] https://cloud.r-project.org/bin/linux/debian bookworm-cran40/" > /etc/apt/sources.list.d/r-project.list \
+    && apt update \
+    && apt install -y r-base r-base-dev \
+        libpoppler-cpp-dev libcurl4-openssl-dev libssl-dev \
+        libxml2-dev libfontconfig1-dev libfreetype6-dev \
     && groupadd -r myuser && useradd -r -g myuser -G audio,video myuser \
     && mkdir -p /home/myuser/Downloads \
     && chown -R myuser:myuser /home/myuser \
-    \
-    # Globally disable the update-notifier.
     && npm config --global set update-notifier false \
-    \
-    # Install all required playwright dependencies for firefox
-    && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm_config_ignore_scripts=1 npx playwright install-deps firefox \
-    \
-    # Cleanup time
+    && npm install -g pnpm@8.15.9 \
+    && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm_config_ignore_scripts=1 npx playwright install-deps firefox chromium \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /src/*.deb \
     && apt clean -y && apt autoremove -y \
     && rm -rf /root/.npm \
-    # This is needed to remove an annoying error message when running headful.
     && mkdir -p /tmp/.X11-unix && chmod 1777 /tmp/.X11-unix
+
+# # Install R packages
+# RUN Rscript -e 'install.packages(c("vctrs", "rlang", "magrittr", "lifecycle", "glue", "cli", "stringi", "stringr", "cpp11", "timechange", "generics", "sys", "curl", "askpass", "Rcpp", "utf8", "withr", "pkgconfig", "fansi", "R6", "pillar", "tidyselect", "tibble", "purrr", "dplyr", "openssl", "mime", "jsonlite", "rstudioapi", "tidyr", "snakecase", "lubridate", "hms", "qpdf", "xml2", "selectr", "httr", "prettyunits", "crayon", "re2", "getPass", "janitor", "listenv", "pdftools", "abjutils", "rvest", "progress"), repos="https://cran.rstudio.com/")'
 
 # Run everything after as non-privileged user.
 USER myuser
@@ -74,11 +68,10 @@ RUN npm --quiet set progress=false \
     && node --version \
     && echo "NPM version:" \
     && npm --version \
-    # Install Camoufox
     && npx camoufox-js fetch \
-    # Overrides the dynamic library used by Firefox to determine trusted root certificates with p11-kit-trust.so, which loads the system certificates.
+    && npx playwright@1.46.1 install chromium \
     && rm -f /home/myuser/.cache/camoufox/libnssckbi.so \
-    && ln -s /usr/lib/x86_64-linux-gnu/pkcs11/p11-kit-trust.so /home/myuser/.cache/camoufox/libnssckbi.so
+    && ln -s "$(find /usr/lib -name p11-kit-trust.so -print -quit)" /home/myuser/.cache/camoufox/libnssckbi.so
 
 ENV APIFY_DEFAULT_BROWSER_PATH=/home/myuser/.cache/camoufox/camoufox-bin
 
